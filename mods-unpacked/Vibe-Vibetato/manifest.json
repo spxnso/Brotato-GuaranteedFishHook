@@ -1,0 +1,16 @@
+{
+	"name": "Vibetato",
+	"namespace": "Vibe",
+	"version_number": "1.0.0",
+	"description": "Run manager for Brotato: ban presets, forced item spawns per wave, custom boss waves, saved run presets with shareable run codes, wave skip, speed multiplier (x2/x3/...), per-character loadout templates and starting items (cursed or not).",
+	"website_url": "",
+	"dependencies": [],
+	"extra": {
+		"godot": {
+			"incompatibilities": [],
+			"authors": ["Vibe"],
+			"tags": ["Cheats", "QoL", "Runs", "Shop", "Waves"],
+			"compatible_mod_loader_version": ["6.0.0", "6.2.0", "6.3.0"]
+		}
+	}
+}
