@@ -93,9 +93,9 @@ func _pick_slot(offers: Array, mode: String) -> int:
 
 
 func _get_target_item(my_id: String):
-	var hash := Keys.generate_hash(my_id)
+	var id_hash := Keys.generate_hash(my_id)
 	for item in items:
-		if item.my_id_hash == hash:
+		if item.my_id_hash == id_hash:
 			return item
 	var short := my_id.trim_prefix("item_")
 	var dlc_path := "res://dlcs/dlc_1/items/%s/%s_data.tres" % [short, short]
