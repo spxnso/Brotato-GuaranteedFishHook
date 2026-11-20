@@ -305,8 +305,10 @@ custom build): `singletons/item_service.gd`, `singletons/run_data.gd`,
 `main.gd`, `singletons/debug_service.gd` and `singletons/progress_data.gd` are
 all still patched by other current mods, and the panel is root-attached so the
 1.2 menu refactor (`ui/menus/title_screen/title_screen.gd`) does not affect it.
-All GDScript avoids Godot-3 type-inference pitfalls (no `:=` on empty literals or
-Variant-returning calls), which is what broke the first Workshop build.
+All GDScript uses plain `=` instead of `:=` everywhere — Godot 3 cannot infer
+several `:=` forms (empty literals, `for`-loop counters, Variant-returning
+calls), and a single missed `:=` kills the whole mod at parse time, which is
+what broke the first two Workshop builds.
 
 ## Disclaimer
 
