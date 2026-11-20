@@ -1,9 +1,9 @@
-const MOD_ID := "Vibe-Vibetato"
-const LOG_NAME := "Vibe-Vibetato"
-const STATE_KEY := "vibe_vibetato_state"
-const RUN_CODE_PREFIX := "VBT1."
+const MOD_ID = "Vibe-Vibetato"
+const LOG_NAME = "Vibe-Vibetato"
+const STATE_KEY = "vibe_vibetato_state"
+const RUN_CODE_PREFIX = "VBT1."
 
-const DEFAULT_CONFIG := {
+const DEFAULT_CONFIG = {
 	"enabled": true,
 	"active_preset": "",
 	"run_code": "",
@@ -43,12 +43,12 @@ static func is_enabled() -> bool:
 
 
 static func load_json_file(path: String) -> Dictionary:
-	var f := File.new()
+	var f = File.new()
 	if f.open(path, File.READ) != OK:
 		return {}
-	var text := f.get_as_text()
+	var text = f.get_as_text()
 	f.close()
-	var parsed := JSON.parse(text)
+	var parsed = JSON.parse(text)
 	if parsed.error != OK or not parsed.result is Dictionary:
 		return {}
 	return parsed.result
@@ -58,17 +58,17 @@ static func load_config() -> Dictionary:
 	var cfg: Dictionary = DEFAULT_CONFIG.duplicate(true)
 	var paths: Array = [mod_dir().plus_file("config.json"), "user://" + MOD_ID + ".json"]
 	for path in paths:
-		var data := load_json_file(path)
+		var data = load_json_file(path)
 		for k in data:
 			cfg[k] = data[k]
 	return cfg
 
 
 static func load_presets_doc() -> Dictionary:
-	var doc := load_json_file(mod_dir().plus_file("presets.default.json"))
+	var doc = load_json_file(mod_dir().plus_file("presets.default.json"))
 	if doc.empty():
 		doc = {"ban_presets": {}, "presets": {}}
-	var user_doc := load_json_file("user://" + MOD_ID + "-presets.json")
+	var user_doc = load_json_file("user://" + MOD_ID + "-presets.json")
 	var ban_a: Dictionary = doc.get("ban_presets", {})
 	var ban_b: Dictionary = user_doc.get("ban_presets", {})
 	for k in ban_b:
@@ -87,7 +87,7 @@ static func load_presets_doc() -> Dictionary:
 static func resolve_active_preset(cfg: Dictionary, doc: Dictionary) -> Dictionary:
 	var run_code: String = String(cfg.get("run_code", "")).strip_edges()
 	if run_code != "":
-		var p := decode_run_code(run_code)
+		var p = decode_run_code(run_code)
 		if not p.empty():
 			p["name"] = "run_code"
 			return p
@@ -106,28 +106,28 @@ static func resolve_active_preset(cfg: Dictionary, doc: Dictionary) -> Dictionar
 
 
 static func encode_run_code(preset: Dictionary) -> String:
-	var copy := preset.duplicate(true)
+	var copy = preset.duplicate(true)
 	copy.erase("name")
 	return RUN_CODE_PREFIX + Marshalls.raw_to_base64(JSON.print(copy, "", true).to_utf8())
 
 
 static func decode_run_code(code: String) -> Dictionary:
-	var c := code.strip_edges()
+	var c = code.strip_edges()
 	if not c.begins_with(RUN_CODE_PREFIX):
 		return {}
-	var raw := Marshalls.base64_to_raw(c.substr(RUN_CODE_PREFIX.length()))
+	var raw = Marshalls.base64_to_raw(c.substr(RUN_CODE_PREFIX.length()))
 	if raw.empty():
 		return {}
-	var parsed := JSON.parse(raw.get_string_from_utf8())
+	var parsed = JSON.parse(raw.get_string_from_utf8())
 	if parsed.error != OK or not parsed.result is Dictionary:
 		return {}
 	return parsed.result
 
 
 static func reload_state() -> void:
-	var cfg := load_config()
-	var doc := load_presets_doc()
-	var preset := resolve_active_preset(cfg, doc)
+	var cfg = load_config()
+	var doc = load_presets_doc()
+	var preset = resolve_active_preset(cfg, doc)
 	var enabled: bool = cfg.get("enabled", true)
 	RunData.set(STATE_KEY, {
 		"enabled": enabled,
@@ -152,8 +152,8 @@ static func find_item(my_id: String):
 	if el == null:
 		el = ItemService.get_element(ItemService.items, Keys.generate_hash(my_id))
 	if el == null:
-		var short := my_id.trim_prefix("item_")
-		var dlc_path := "res://dlcs/dlc_1/items/%s/%s_data.tres" % [short, short]
+		var short = my_id.trim_prefix("item_")
+		var dlc_path = "res://dlcs/dlc_1/items/%s/%s_data.tres" % [short, short]
 		if ResourceLoader.exists(dlc_path):
 			el = load(dlc_path)
 	return el
@@ -188,7 +188,7 @@ static func apply_curse(item_data, player_index: int):
 
 
 static func add_item_safe(item, player_index: int) -> void:
-	var argc := -1
+	var argc = -1
 	for m in RunData.get_method_list():
 		if m["name"] == "add_item":
 			argc = m["args"].size()
@@ -206,7 +206,7 @@ static func get_ban_list(preset: Dictionary) -> Dictionary:
 		"item_tiers": [],
 		"weapon_tiers": [],
 	}
-	var doc := get_presets_doc()
+	var doc = get_presets_doc()
 	var ban_presets: Dictionary = doc.get("ban_presets", {})
 	var bp_name: String = String(preset.get("ban_preset", ""))
 	if bp_name != "" and ban_presets.has(bp_name):
@@ -242,12 +242,12 @@ static func ban_list_empty(ban: Dictionary) -> bool:
 static func is_banned(data, ban: Dictionary) -> bool:
 	if data == null:
 		return false
-	var id := ""
+	var id = ""
 	if data.get("my_id") != null:
 		id = String(data.get("my_id"))
 	elif data.get("weapon_id") != null:
 		id = String(data.get("weapon_id"))
-	var tier := int(data.get("tier", 0))
+	var tier = int(data.get("tier", 0))
 	if data is ItemData:
 		return ban["items"].has(id) or ban["item_tiers"].has(tier)
 	if data is WeaponData:
@@ -286,12 +286,12 @@ static func apply_preset_to_debug_service() -> void:
 		return
 	var preset: Dictionary = get_preset()
 	if preset.has("start_wave") and int(preset["start_wave"]) > 1:
-		var w := int(preset["start_wave"])
+		var w = int(preset["start_wave"])
 		DebugService.starting_wave = w
 		if preset.has("starting_gold"):
 			DebugService.starting_gold = int(preset["starting_gold"])
 		else:
-			var per_wave := int(get_config().get("wave_skip_gold_per_wave", 30))
+			var per_wave = int(get_config().get("wave_skip_gold_per_wave", 30))
 			DebugService.starting_gold = per_wave * (w - 1)
 		ModLoaderLog.info("Wave skip: starting at wave %d with %d materials." % [w, DebugService.starting_gold], LOG_NAME)
 	else:
@@ -300,7 +300,7 @@ static func apply_preset_to_debug_service() -> void:
 	DebugService.instant_waves = bool(preset.get("instant_waves", false))
 	if DebugService.instant_waves:
 		ModLoaderLog.info("Instant waves enabled (waves last 1 second).", LOG_NAME)
-	var items := _starting_items_data(preset)
+	var items = _starting_items_data(preset)
 	DebugService.debug_items = items
 	if not items.empty():
 		ModLoaderLog.info("Starting items queued: %s" % str(preset.get("starting_items", [])), LOG_NAME)
@@ -309,8 +309,8 @@ static func apply_preset_to_debug_service() -> void:
 static func _starting_items_data(preset: Dictionary) -> Array:
 	var items: Array = []
 	for entry in preset.get("starting_items", []):
-		var my_id := ""
-		var cursed := false
+		var my_id = ""
+		var cursed = false
 		if entry is String:
 			my_id = entry
 		elif entry is Dictionary:
@@ -342,22 +342,22 @@ static func set_panel_visible(v: bool) -> void:
 static func apply_boss_waves_from_preset() -> void:
 	if not is_enabled():
 		return
-	var preset := get_preset()
+	var preset = get_preset()
 	if not preset.has("boss_waves"):
 		return
 	var boss_waves: Array = []
 	for w in preset["boss_waves"]:
 		boss_waves.push_back(int(w))
-	var changed := 0
+	var changed = 0
 	for dlc in ProgressData.available_dlcs:
 		for zone in dlc.zones:
 			var waves_data: Array = zone.waves_data
 			var boss_template = _find_boss_group(waves_data)
 			for i in waves_data.size():
 				var wave = waves_data[i]
-				var wave_num := i + 1
-				var should_be_boss := boss_waves.has(wave_num)
-				var had_boss_group := false
+				var wave_num = i + 1
+				var should_be_boss = boss_waves.has(wave_num)
+				var had_boss_group = false
 				for group in wave.groups_data:
 					if group.get("is_boss") == true:
 						had_boss_group = true
@@ -396,11 +396,11 @@ static func speed_steps() -> Array:
 
 
 static func persist_config(updates: Dictionary) -> void:
-	var path := "user://" + MOD_ID + ".json"
-	var data := load_json_file(path)
+	var path = "user://" + MOD_ID + ".json"
+	var data = load_json_file(path)
 	for k in updates:
 		data[k] = updates[k]
-	var f := File.new()
+	var f = File.new()
 	if f.open(path, File.WRITE) != OK:
 		ModLoaderLog.error("Could not write config file '%s'." % path, LOG_NAME)
 		return
@@ -409,8 +409,8 @@ static func persist_config(updates: Dictionary) -> void:
 
 
 static func set_preset_field(preset_name: String, key: String, value) -> void:
-	var path := "user://" + MOD_ID + "-presets.json"
-	var doc := load_json_file(path)
+	var path = "user://" + MOD_ID + "-presets.json"
+	var doc = load_json_file(path)
 	if not doc.has("presets"):
 		doc["presets"] = {}
 	var presets: Dictionary = doc["presets"]
@@ -418,7 +418,7 @@ static func set_preset_field(preset_name: String, key: String, value) -> void:
 		presets[preset_name] = {}
 	var p: Dictionary = presets[preset_name]
 	p[key] = value
-	var f := File.new()
+	var f = File.new()
 	if f.open(path, File.WRITE) != OK:
 		ModLoaderLog.error("Could not write presets file '%s'." % path, LOG_NAME)
 		return
@@ -445,7 +445,7 @@ static func apply_preset_by_name(name: String) -> bool:
 
 
 static func apply_run_code(code: String) -> bool:
-	var preset := decode_run_code(code)
+	var preset = decode_run_code(code)
 	if preset.empty():
 		ModLoaderLog.warning("Invalid run code.", LOG_NAME)
 		return false
@@ -467,12 +467,12 @@ static func set_speed(speed: float) -> void:
 
 
 static func cycle_speed() -> float:
-	var cfg := get_config()
+	var cfg = get_config()
 	var steps: Array = cfg.get("speed_steps", [1, 2, 3, 4])
 	if steps.empty():
 		steps = [1, 2, 3, 4]
-	var cur := Engine.time_scale
-	var idx := 0
+	var cur = Engine.time_scale
+	var idx = 0
 	for i in steps.size():
 		if float(steps[i]) == cur:
 			idx = i
