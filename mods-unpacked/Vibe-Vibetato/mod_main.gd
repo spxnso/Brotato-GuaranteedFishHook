@@ -1,6 +1,6 @@
 extends Node
 
-const MOD_ID := "Vibe-Vibetato"
+const MOD_ID = "Vibe-Vibetato"
 const Core = preload("res://mods-unpacked/Vibe-Vibetato/src/vibetato_core.gd")
 const PanelScene = preload("res://mods-unpacked/Vibe-Vibetato/src/vibetato_panel.gd")
 

@@ -1,7 +1,7 @@
 extends "res://singletons/run_data.gd"
 
 const Core = preload("res://mods-unpacked/Vibe-Vibetato/src/vibetato_core.gd")
-const LOG_NAME := "Vibe-Vibetato:RunData"
+const LOG_NAME = "Vibe-Vibetato:RunData"
 
 
 func add_starting_items_and_weapons() -> void:
@@ -13,7 +13,7 @@ func add_starting_items_and_weapons() -> void:
 		return
 
 	for player_index in players_data.size():
-		var char_id := Core.get_character_id(player_index)
+		var char_id = Core.get_character_id(player_index)
 
 		var templates: Dictionary = preset.get("loadout_templates", {})
 		if char_id != "" and templates.has(char_id):
@@ -40,8 +40,8 @@ func add_starting_items_and_weapons() -> void:
 
 
 func _add_template_item(entry, player_index: int, char_id: String) -> void:
-	var my_id := ""
-	var cursed := false
+	var my_id = ""
+	var cursed = false
 	if entry is String:
 		my_id = entry
 	elif entry is Dictionary:
