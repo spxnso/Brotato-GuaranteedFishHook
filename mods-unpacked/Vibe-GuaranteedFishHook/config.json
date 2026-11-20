@@ -1,0 +1,8 @@
+{
+	"enabled": true,
+	"wave": 5,
+	"waves": [],
+	"item_id": "item_fish_hook",
+	"slot": "last_item",
+	"apply_shop_modifiers": true
+}

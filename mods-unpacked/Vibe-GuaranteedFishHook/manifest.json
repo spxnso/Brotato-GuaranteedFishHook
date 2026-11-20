@@ -1,0 +1,16 @@
+{
+	"name": "GuaranteedFishHook",
+	"namespace": "Vibe",
+	"version_number": "1.0.0",
+	"description": "Guarantees a configurable item (default: Fish Hook) in the shop of a configurable wave (default: wave 5).",
+	"website_url": "",
+	"dependencies": [],
+	"extra": {
+		"godot": {
+			"incompatibilities": [],
+			"authors": ["Vibe"],
+			"tags": ["Cheats", "Shop"],
+			"compatible_mod_loader_version": ["6.0.0", "6.2.0", "6.3.0"]
+		}
+	}
+}
