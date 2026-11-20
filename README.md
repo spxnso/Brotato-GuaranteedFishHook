@@ -190,6 +190,26 @@ from the Workshop (read-only location), create `user://Vibe-Vibetato.json`
 | `hotkey_speed_cycle` | `"F9"` | Key that cycles `Engine.time_scale` through `speed_steps` mid-run. |
 | `wave_skip_gold_per_wave` | `30` | Materials granted per skipped wave when a preset sets `start_wave` without `starting_gold`. |
 
+## In-game panel
+
+Vibetato adds a panel to the **top-right of the main menu** (no restart needed
+— changes apply immediately and are persisted):
+
+- **Preset** dropdown — lists every preset from the presets file (plus `(none)`
+  for vanilla behavior). Selecting one stores it as `active_preset` in
+  `user://Vibe-Vibetato.json` and re-applies wave skip, boss waves, speed, etc.
+- **Ban** dropdown — picks the `ban_preset` of the currently active named
+  preset (written into `user://Vibe-Vibetato-presets.json`).
+- **Code** field + **Apply** — paste a `VBT1.…` run code to use it (stored as
+  `run_code`, which takes priority over `active_preset`).
+- **Copy run code of active preset** — puts the active preset's shareable run
+  code on the clipboard (also logged to `modloader.log` at startup).
+- **Speed** dropdown — x1/x2/x3/x4 from `speed_steps`; sets
+  `Engine.time_scale` immediately and persists `speed_multiplier`. The
+  `hotkey_speed_cycle` hotkey (F9) still works in-run.
+- **Enabled** checkbox — master switch, persisted as `enabled`.
+- Status line shows the active preset, current speed and its run code.
+
 ## Presets, ban presets and run codes
 
 Presets live in `presets.default.json` (bundled examples) and can be extended

@@ -135,9 +135,11 @@ static func reload_state() -> void:
 		"presets_doc": doc,
 	})
 	if not enabled:
+		Engine.time_scale = 1.0
 		ModLoaderLog.info("Disabled via config.", LOG_NAME)
 		return
 	apply_preset_to_debug_service()
+	apply_boss_waves_from_preset()
 	Engine.time_scale = float(cfg.get("speed_multiplier", 1.0))
 	if not preset.empty():
 		ModLoaderLog.info("Active preset: '%s'." % String(preset.get("name", "")), LOG_NAME)
@@ -332,6 +334,94 @@ static func _find_boss_group(waves_data: Array):
 			if group.get("is_boss") == true:
 				return group
 	return null
+
+
+static func list_preset_names() -> Array:
+	var names := []
+	var presets: Dictionary = get_presets_doc().get("presets", {})
+	for k in presets:
+		names.push_back(String(k))
+	names.sort()
+	return names
+
+
+static func active_preset_name() -> String:
+	return String(get_preset().get("name", ""))
+
+
+static func speed_steps() -> Array:
+	return get_config().get("speed_steps", [1, 2, 3, 4])
+
+
+static func persist_config(updates: Dictionary) -> void:
+	var path := "user://" + MOD_ID + ".json"
+	var data := load_json_file(path)
+	for k in updates:
+		data[k] = updates[k]
+	var f := File.new()
+	if f.open(path, File.WRITE) != OK:
+		ModLoaderLog.error("Could not write config file '%s'." % path, LOG_NAME)
+		return
+	f.store_string(JSON.print(data, "\t", true))
+	f.close()
+
+
+static func set_preset_field(preset_name: String, key: String, value) -> void:
+	var path := "user://" + MOD_ID + "-presets.json"
+	var doc := load_json_file(path)
+	if not doc.has("presets"):
+		doc["presets"] = {}
+	var presets: Dictionary = doc["presets"]
+	if not presets.has(preset_name):
+		presets[preset_name] = {}
+	var p: Dictionary = presets[preset_name]
+	p[key] = value
+	var f := File.new()
+	if f.open(path, File.WRITE) != OK:
+		ModLoaderLog.error("Could not write presets file '%s'." % path, LOG_NAME)
+		return
+	f.store_string(JSON.print(doc, "\t", true))
+	f.close()
+	reload_state()
+
+
+static func clear_preset() -> void:
+	persist_config({"active_preset": "", "run_code": ""})
+	reload_state()
+	ModLoaderLog.info("Preset cleared (vanilla behavior).", LOG_NAME)
+
+
+static func apply_preset_by_name(name: String) -> bool:
+	var presets: Dictionary = get_presets_doc().get("presets", {})
+	if not presets.has(name):
+		ModLoaderLog.warning("Preset '%s' not found." % name, LOG_NAME)
+		return false
+	persist_config({"active_preset": name, "run_code": ""})
+	reload_state()
+	ModLoaderLog.info("Preset '%s' applied." % name, LOG_NAME)
+	return true
+
+
+static func apply_run_code(code: String) -> bool:
+	var preset := decode_run_code(code)
+	if preset.empty():
+		ModLoaderLog.warning("Invalid run code.", LOG_NAME)
+		return false
+	persist_config({"run_code": code.strip_edges()})
+	reload_state()
+	ModLoaderLog.info("Run code applied.", LOG_NAME)
+	return true
+
+
+static func set_enabled(enabled: bool) -> void:
+	persist_config({"enabled": enabled})
+	reload_state()
+
+
+static func set_speed(speed: float) -> void:
+	Engine.time_scale = speed
+	persist_config({"speed_multiplier": speed})
+	reload_state()
 
 
 static func cycle_speed() -> float:
