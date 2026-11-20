@@ -5,5 +5,6 @@
 	"speed_multiplier": 1.0,
 	"speed_steps": [1, 2, 3, 4],
 	"hotkey_speed_cycle": "F9",
-	"wave_skip_gold_per_wave": 30
+	"wave_skip_gold_per_wave": 30,
+	"default_starting_gold": 30
 }

@@ -41,7 +41,7 @@ func _apply_forced_spawns(offers: Array, wave: int, player_index: int, preset: D
 	var forced: Array = forced_map[str(wave)]
 	if forced.empty():
 		return offers
-	var item_slots := []
+	var item_slots: Array = []
 	for i in offers.size():
 		if offers[i][0] is ItemData:
 			item_slots.push_back(i)

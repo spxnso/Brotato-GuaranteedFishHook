@@ -11,6 +11,7 @@ const DEFAULT_CONFIG := {
 	"speed_steps": [1, 2, 3, 4],
 	"hotkey_speed_cycle": "F9",
 	"wave_skip_gold_per_wave": 30,
+	"default_starting_gold": 30,
 }
 
 
@@ -55,7 +56,7 @@ static func load_json_file(path: String) -> Dictionary:
 
 static func load_config() -> Dictionary:
 	var cfg: Dictionary = DEFAULT_CONFIG.duplicate(true)
-	var paths := [mod_dir().plus_file("config.json"), "user://" + MOD_ID + ".json"]
+	var paths: Array = [mod_dir().plus_file("config.json"), "user://" + MOD_ID + ".json"]
 	for path in paths:
 		var data := load_json_file(path)
 		for k in data:
@@ -134,11 +135,11 @@ static func reload_state() -> void:
 		"preset": preset,
 		"presets_doc": doc,
 	})
+	apply_preset_to_debug_service()
 	if not enabled:
 		Engine.time_scale = 1.0
 		ModLoaderLog.info("Disabled via config.", LOG_NAME)
 		return
-	apply_preset_to_debug_service()
 	apply_boss_waves_from_preset()
 	Engine.time_scale = float(cfg.get("speed_multiplier", 1.0))
 	if not preset.empty():
@@ -199,7 +200,7 @@ static func add_item_safe(item, player_index: int) -> void:
 
 
 static func get_ban_list(preset: Dictionary) -> Dictionary:
-	var ban := {
+	var ban: Dictionary = {
 		"items": [],
 		"weapons": [],
 		"item_tiers": [],
@@ -217,7 +218,7 @@ static func get_ban_list(preset: Dictionary) -> Dictionary:
 static func _merge_ban(ban: Dictionary, src) -> void:
 	if not src is Dictionary:
 		return
-	var map := {
+	var map: Dictionary = {
 		"banned_items": "items",
 		"items": "items",
 		"banned_weapons": "weapons",
@@ -266,7 +267,7 @@ static func is_offered(offers: Array, item) -> bool:
 
 
 static func random_unbanned_replacement(data, ban: Dictionary, offers: Array):
-	var pool := []
+	var pool: Array = []
 	var src: Array = ItemService.items if data is ItemData else ItemService.weapons
 	for el in src:
 		if not is_banned(el, ban) and not is_offered(offers, el):
@@ -278,23 +279,64 @@ static func random_unbanned_replacement(data, ban: Dictionary, offers: Array):
 
 static func apply_preset_to_debug_service() -> void:
 	if not is_enabled():
+		DebugService.starting_wave = 1
+		DebugService.starting_gold = 30
+		DebugService.instant_waves = false
+		DebugService.debug_items = []
 		return
-	var preset := get_preset()
-	if preset.empty():
-		return
-	if preset.has("start_wave"):
+	var preset: Dictionary = get_preset()
+	if preset.has("start_wave") and int(preset["start_wave"]) > 1:
 		var w := int(preset["start_wave"])
-		if w > 1:
-			DebugService.starting_wave = w
-			if preset.has("starting_gold"):
-				DebugService.starting_gold = int(preset["starting_gold"])
-			else:
-				var per_wave := int(get_config().get("wave_skip_gold_per_wave", 30))
-				DebugService.starting_gold = per_wave * (w - 1)
-			ModLoaderLog.info("Wave skip: starting at wave %d with %d materials." % [w, DebugService.starting_gold], LOG_NAME)
-	if bool(preset.get("instant_waves", false)):
-		DebugService.instant_waves = true
+		DebugService.starting_wave = w
+		if preset.has("starting_gold"):
+			DebugService.starting_gold = int(preset["starting_gold"])
+		else:
+			var per_wave := int(get_config().get("wave_skip_gold_per_wave", 30))
+			DebugService.starting_gold = per_wave * (w - 1)
+		ModLoaderLog.info("Wave skip: starting at wave %d with %d materials." % [w, DebugService.starting_gold], LOG_NAME)
+	else:
+		DebugService.starting_wave = 1
+		DebugService.starting_gold = int(get_config().get("default_starting_gold", 30))
+	DebugService.instant_waves = bool(preset.get("instant_waves", false))
+	if DebugService.instant_waves:
 		ModLoaderLog.info("Instant waves enabled (waves last 1 second).", LOG_NAME)
+	var items := _starting_items_data(preset)
+	DebugService.debug_items = items
+	if not items.empty():
+		ModLoaderLog.info("Starting items queued: %s" % str(preset.get("starting_items", [])), LOG_NAME)
+
+
+static func _starting_items_data(preset: Dictionary) -> Array:
+	var items: Array = []
+	for entry in preset.get("starting_items", []):
+		var my_id := ""
+		var cursed := false
+		if entry is String:
+			my_id = entry
+		elif entry is Dictionary:
+			my_id = String(entry.get("id", ""))
+			cursed = bool(entry.get("cursed", false))
+		if my_id == "":
+			continue
+		var item = find_item(my_id)
+		if item == null:
+			ModLoaderLog.warning("Starting item '%s' not found." % my_id, LOG_NAME)
+			continue
+		if cursed:
+			var cursed_item = apply_curse(item, 0)
+			if cursed_item != null:
+				item = cursed_item
+				ModLoaderLog.info("Starting item '%s' cursed." % my_id, LOG_NAME)
+			else:
+				ModLoaderLog.warning("Cannot curse '%s' (Abyssal Terrors DLC missing); adding it uncursed." % my_id, LOG_NAME)
+		items.push_back(item)
+	return items
+
+
+static func set_panel_visible(v: bool) -> void:
+	var p = RunData.get("vibe_vibetato_panel")
+	if p != null:
+		p.visible = v
 
 
 static func apply_boss_waves_from_preset() -> void:
@@ -303,7 +345,7 @@ static func apply_boss_waves_from_preset() -> void:
 	var preset := get_preset()
 	if not preset.has("boss_waves"):
 		return
-	var boss_waves := []
+	var boss_waves: Array = []
 	for w in preset["boss_waves"]:
 		boss_waves.push_back(int(w))
 	var changed := 0
@@ -337,7 +379,7 @@ static func _find_boss_group(waves_data: Array):
 
 
 static func list_preset_names() -> Array:
-	var names := []
+	var names: Array = []
 	var presets: Dictionary = get_presets_doc().get("presets", {})
 	for k in presets:
 		names.push_back(String(k))
