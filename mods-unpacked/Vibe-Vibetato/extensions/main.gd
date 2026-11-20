@@ -1,7 +1,7 @@
 extends "res://main.gd"
 
 const Core = preload("res://mods-unpacked/Vibe-Vibetato/src/vibetato_core.gd")
-const LOG_NAME := "Vibe-Vibetato:Main"
+const LOG_NAME = "Vibe-Vibetato:Main"
 
 
 func _on_EntitySpawner_players_spawned(players: Array) -> void:
@@ -11,7 +11,7 @@ func _on_EntitySpawner_players_spawned(players: Array) -> void:
 		return
 	var preset: Dictionary = Core.get_preset()
 	if preset.has("seed"):
-		var s := int(preset["seed"])
+		var s = int(preset["seed"])
 		seed(s)
 		ModLoaderLog.info("Run seed set to %d." % s, LOG_NAME)
 	if preset.has("speed_multiplier"):

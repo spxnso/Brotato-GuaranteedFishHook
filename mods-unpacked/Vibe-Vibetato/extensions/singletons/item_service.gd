@@ -1,7 +1,7 @@
 extends "res://singletons/item_service.gd"
 
 const Core = preload("res://mods-unpacked/Vibe-Vibetato/src/vibetato_core.gd")
-const LOG_NAME := "Vibe-Vibetato:ItemService"
+const LOG_NAME = "Vibe-Vibetato:ItemService"
 
 
 func get_player_shop_items(wave: int, player_index: int, args: ItemServiceGetShopItemsArgs) -> Array:
@@ -18,13 +18,13 @@ func get_player_shop_items(wave: int, player_index: int, args: ItemServiceGetSho
 
 
 func _apply_bans(offers: Array, wave: int, preset: Dictionary) -> Array:
-	var ban := Core.get_ban_list(preset)
+	var ban = Core.get_ban_list(preset)
 	if Core.ban_list_empty(ban):
 		return offers
 	for i in offers.size():
 		var data = offers[i][0]
 		if Core.is_banned(data, ban):
-			var old_id := String(data.get("my_id") if data.get("my_id") != null else data.get("weapon_id"))
+			var old_id = String(data.get("my_id") if data.get("my_id") != null else data.get("weapon_id"))
 			var repl = Core.random_unbanned_replacement(data, ban, offers)
 			if repl != null:
 				offers[i][0] = repl
@@ -47,9 +47,9 @@ func _apply_forced_spawns(offers: Array, wave: int, player_index: int, preset: D
 			item_slots.push_back(i)
 	if item_slots.empty():
 		return offers
-	var slot_idx := 0
+	var slot_idx = 0
 	for entry in forced:
-		var my_id := String(entry)
+		var my_id = String(entry)
 		var item = Core.find_item(my_id)
 		if item == null:
 			ModLoaderLog.warning("Wave %d: forced item '%s' not found." % [wave, my_id], LOG_NAME)
