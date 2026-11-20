@@ -1,8 +1,8 @@
 {
 	"name": "GuaranteedFishHook",
 	"namespace": "Vibe",
-	"version_number": "1.0.0",
-	"description": "Guarantees a configurable item (default: Fish Hook) in the shop of a configurable wave (default: wave 5).",
+	"version_number": "1.1.0",
+	"description": "Guarantees a configurable item (default: Fish Hook) exactly once in the shop of a configurable wave (default: wave 5). Configurable in-game via dami-ModOptions.",
 	"website_url": "",
 	"dependencies": [],
 	"extra": {
@@ -10,7 +10,50 @@
 			"incompatibilities": [],
 			"authors": ["Vibe"],
 			"tags": ["Cheats", "Shop"],
-			"compatible_mod_loader_version": ["6.0.0", "6.2.0", "6.3.0"]
+			"compatible_mod_loader_version": ["6.0.0", "6.2.0", "6.3.0"],
+			"optional_dependencies": ["dami-ModOptions"],
+			"config_schema": {
+				"type": "object",
+				"properties": {
+					"enabled": {
+						"type": "boolean",
+						"default": true,
+						"description": "Master switch. Set false to disable without uninstalling."
+					},
+					"wave": {
+						"type": "number",
+						"default": 5,
+						"minimum": 1,
+						"maximum": 999,
+						"description": "Wave whose shop gets the guaranteed item (the shop shown after that wave). Used when 'waves' is empty."
+					},
+					"waves": {
+						"type": "array",
+						"default": [],
+						"description": "If non-empty, list of waves, e.g. [3, 5, 10]. Overrides 'wave'."
+					},
+					"item_id": {
+						"type": "string",
+						"default": "item_fish_hook",
+						"description": "Any item id, e.g. item_medikit, item_mirror. item_fish_hook needs the Abyssal Terrors DLC."
+					},
+					"slot": {
+						"type": "string",
+						"default": "last_item",
+						"description": "Which shop slot to use: first, last, random (any slot, incl. weapons), first_item, last_item, random_item (item slots only)."
+					},
+					"apply_shop_modifiers": {
+						"type": "boolean",
+						"default": true,
+						"description": "Run the forced item through the game's shop modifiers (Goldfish tier bump, curse chance, DLC effects), like a natural offer."
+					},
+					"force_once_per_wave": {
+						"type": "boolean",
+						"default": true,
+						"description": "If true, the item is forced only into the first shop roll of the wave (not re-forced on rerolls) and always appears in exactly one slot."
+					}
+				}
+			}
 		}
 	}
 }

@@ -41,12 +41,22 @@ contains `mods-unpacked/Vibe-GuaranteedFishHook/...`.
 
 ## Configuration
 
+### In-game via dami-ModOptions (recommended)
+
+If you have **dami-ModOptions** subscribed (Workshop item 2944608034, listed as
+an optional dependency in `manifest.json`), all settings below are editable
+in-game: open the **Mods** menu → **Mod Options** → **GuaranteedFishHook**.
+Changes are saved to `user://configs/Vibe-GuaranteedFishHook/<version>.json`
+and apply on the next run — no restart, no file editing.
+
+### Via files
+
 Edit `config.json` inside the mod folder
 (`<game dir>/mods-unpacked/Vibe-GuaranteedFishHook/config.json`) and restart the
 game. If you installed the mod from the Workshop (read-only location), create
 `user://Vibe-GuaranteedFishHook.json` (same JSON, in the user data folder above)
-instead — it overrides the bundled `config.json`. All keys are optional; missing
-keys fall back to the defaults below.
+instead — it overrides both the bundled `config.json` and the ModOptions config.
+All keys are optional; missing keys fall back to the defaults below.
 
 ```json
 {
@@ -55,7 +65,8 @@ keys fall back to the defaults below.
 	"waves": [],
 	"item_id": "item_fish_hook",
 	"slot": "last_item",
-	"apply_shop_modifiers": true
+	"apply_shop_modifiers": true,
+	"force_once_per_wave": true
 }
 ```
 
@@ -65,12 +76,14 @@ keys fall back to the defaults below.
 | `wave` | `5` | Wave whose shop gets the guaranteed item (the shop after that wave). |
 | `waves` | `[]` | If non-empty, a list of waves, e.g. `[3, 5, 10]`; overrides `wave`. |
 | `item_id` | `"item_fish_hook"` | Any item id, e.g. `"item_medikit"`, `"item_mirror"`. |
-| `slot` | `"last_item"` | Which shop slot to replace: `"first"`, `"last"`, `"random"` (any slot, incl. weapons) or `"first_item"`, `"last_item"`, `"random_item"` (item slots only, so the guaranteed weapon slots stay untouched). |
+| `slot` | `"last_item"` | Which shop slot to use: `"first"`, `"last"`, `"random"` (any slot, incl. weapons) or `"first_item"`, `"last_item"`, `"random_item"` (item slots only, so the guaranteed weapon slots stay untouched). |
 | `apply_shop_modifiers` | `true` | Run the forced item through the game's shop modifiers (Goldfish tier bump, curse chance, DLC effects), like a natural offer. Set `false` for the plain item. |
+| `force_once_per_wave` | `true` | The item is forced only into the **first** shop roll of the wave (not re-forced on rerolls), and it always appears in **exactly one slot** — extra natural occurrences are replaced by a random other offer. Set `false` to re-force on every roll/reroll. |
 
 Notes:
 
-- If the item already appears in that shop naturally, nothing is replaced.
+- The guaranteed item appears exactly once per shop: natural duplicates of it
+  are replaced, and it is placed in a single configured slot.
 - Works per player in co-op; each player's shop roll is patched independently.
 - Changing `item_id` makes it a generic "guaranteed item" mod; `wave`/`waves`
   make it a "guaranteed item at wave N" mod.
