@@ -4,5 +4,6 @@
 	"waves": [],
 	"item_id": "item_fish_hook",
 	"slot": "last_item",
-	"apply_shop_modifiers": true
+	"apply_shop_modifiers": true,
+	"force_once_per_wave": true
 }

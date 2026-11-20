@@ -10,9 +10,12 @@ const DEFAULTS := {
 	"item_id": "item_fish_hook",
 	"slot": "last_item",
 	"apply_shop_modifiers": true,
+	"force_once_per_wave": true,
 }
 
 var _missing_item_logged := false
+var _forced_keys := {}
+var _last_wave := 0
 
 
 func get_player_shop_items(wave: int, player_index: int, args: ItemServiceGetShopItemsArgs) -> Array:
@@ -31,18 +34,39 @@ func get_player_shop_items(wave: int, player_index: int, args: ItemServiceGetSho
 			ModLoaderLog.error("Item '%s' not found. item_fish_hook needs the Abyssal Terrors DLC. Shop left unchanged." % String(cfg.get("item_id", "")), LOG_NAME)
 		return offers
 
-	if _already_offered(offers, target):
+	if wave < _last_wave or wave == 1:
+		_forced_keys.clear()
+	_last_wave = wave
+
+	var key = str(wave) + ":" + str(player_index)
+	if cfg.get("force_once_per_wave", true) and _forced_keys.has(key):
 		return offers
+
+	# Guarantee the item appears exactly once in this shop: replace any extra
+	# natural occurrences with a random other offer of the same type, then
+	# force the item into a single configured slot.
+	var dupe_slots = []
+	for i in offers.size():
+		var d = offers[i][0]
+		if d != null and d.get("my_id_hash") == target.my_id_hash:
+			dupe_slots.push_back(i)
 
 	var index := _pick_slot(offers, String(cfg.get("slot", "last_item")))
 	if index < 0:
 		return offers
+
+	for i in dupe_slots:
+		if i != index:
+			var repl = _random_replacement(offers[i][0], target, offers)
+			if repl != null:
+				offers[i][0] = repl
 
 	var forced = target
 	if cfg.get("apply_shop_modifiers", true):
 		forced = apply_item_effect_modifications(target, player_index)
 
 	offers[index][0] = forced
+	_forced_keys[key] = true
 	ModLoaderLog.info("Wave %d shop: slot %d forced to '%s' (player %d)." % [wave, index, target.my_id, player_index + 1], LOG_NAME)
 	return offers
 
@@ -57,9 +81,23 @@ func _wave_matches(wave: int, cfg: Dictionary) -> bool:
 	return false
 
 
-func _already_offered(offers: Array, target) -> bool:
+func _random_replacement(data, target, offers: Array):
+	var pool: Array = items if data is ItemData else weapons
+	var candidates = []
+	for el in pool:
+		if el.get("my_id_hash") == target.get("my_id_hash"):
+			continue
+		if _offered(offers, el):
+			continue
+		candidates.push_back(el)
+	if candidates.empty():
+		return null
+	return candidates[randi() % candidates.size()]
+
+
+func _offered(offers: Array, el) -> bool:
 	for entry in offers:
-		if entry[0] is ItemData and entry[0].my_id_hash == target.my_id_hash:
+		if entry[0] != null and entry[0].get("my_id_hash") == el.get("my_id_hash"):
 			return true
 	return false
 
@@ -106,6 +144,15 @@ func _get_target_item(my_id: String):
 
 func _get_config() -> Dictionary:
 	var cfg: Dictionary = DEFAULTS.duplicate(true)
+
+	# 1) Bundled config.json (also the default config for dami-ModOptions)
+	# 2) Config managed by dami-ModOptions / ModLoaderConfig (in-game editable)
+	# 3) Manual override file user://Vibe-GuaranteedFishHook.json
+	var mod_cfg = ModLoaderConfig.get_current_config(MOD_ID)
+	if mod_cfg != null and mod_cfg.data is Dictionary:
+		for key in mod_cfg.data:
+			cfg[key] = mod_cfg.data[key]
+
 	var paths := [
 		ModLoaderMod.get_unpacked_dir().plus_file(MOD_ID + "/config.json"),
 		"user://" + MOD_ID + ".json",
