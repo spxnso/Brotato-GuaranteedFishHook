@@ -26,7 +26,7 @@ func add_starting_items_and_weapons() -> void:
 				else:
 					ModLoaderLog.warning("Loadout template '%s': weapon '%s' not found." % [char_id, wid], LOG_NAME)
 			for entry in template.get("items", []):
-				_add_preset_item(entry, player_index, char_id)
+				_add_template_item(entry, player_index, char_id)
 
 		for wid in preset.get("starting_weapons", []):
 			var weapon = Core.find_weapon(String(wid))
@@ -36,13 +36,10 @@ func add_starting_items_and_weapons() -> void:
 			else:
 				ModLoaderLog.warning("Starting weapon '%s' not found." % wid, LOG_NAME)
 
-		for entry in preset.get("starting_items", []):
-			_add_preset_item(entry, player_index, "")
-
-	ModLoaderLog.info("Starting items/weapons applied from preset '%s'." % String(preset.get("name", "")), LOG_NAME)
+	ModLoaderLog.info("Loadout/starting weapons applied from preset '%s'." % String(preset.get("name", "")), LOG_NAME)
 
 
-func _add_preset_item(entry, player_index: int, char_id: String) -> void:
+func _add_template_item(entry, player_index: int, char_id: String) -> void:
 	var my_id := ""
 	var cursed := false
 	if entry is String:
@@ -54,15 +51,13 @@ func _add_preset_item(entry, player_index: int, char_id: String) -> void:
 		return
 	var item = Core.find_item(my_id)
 	if item == null:
-		ModLoaderLog.warning("Starting item '%s' not found." % my_id, LOG_NAME)
+		ModLoaderLog.warning("Loadout template '%s': item '%s' not found." % [char_id, my_id], LOG_NAME)
 		return
 	if cursed:
 		var cursed_item = Core.apply_curse(item, player_index)
 		if cursed_item != null:
 			item = cursed_item
-			ModLoaderLog.info("Starting item '%s' cursed." % my_id, LOG_NAME)
 		else:
-			ModLoaderLog.warning("Cannot curse '%s' (Abyssal Terrors DLC not available); adding it uncursed." % my_id, LOG_NAME)
+			ModLoaderLog.warning("Cannot curse '%s' (Abyssal Terrors DLC missing); adding it uncursed." % my_id, LOG_NAME)
 	Core.add_item_safe(item, player_index)
-	var origin := char_id if char_id != "" else String(Core.get_preset().get("name", "preset"))
-	ModLoaderLog.info("Starting item '%s' added (%s)." % [my_id, origin], LOG_NAME)
+	ModLoaderLog.info("Loadout template '%s': item '%s' added." % [char_id, my_id], LOG_NAME)

@@ -129,19 +129,25 @@ libraries required. It only contains its own code (no game code).
 
 ## How it works
 
-The mod installs five script extensions:
+The mod installs four script extensions:
 
 - `extensions/singletons/item_service.gd` — patches `get_player_shop_items` to
   apply bans and forced per-wave spawns to each player's shop roll.
 - `extensions/singletons/run_data.gd` — patches `add_starting_items_and_weapons`
-  to add preset starting weapons/items (cursed or not) and per-character
-  loadout templates at run start.
-- `extensions/singletons/progress_data.gd` and
-  `extensions/ui/menus/pages/main_menu.gd` — apply boss-wave selection to the
-  zone wave data (`zone.waves_data[i]` = wave `i+1`, `groups_data[].is_boss`)
-  and push wave-skip settings into `DebugService` before each run.
-- `extensions/main.gd` — on run start applies `seed` and `speed_multiplier`;
-  on `clean_up_room` resets the speed to x1.
+  to add preset starting weapons and per-character loadout templates at run start.
+- `extensions/singletons/progress_data.gd` — applies boss-wave selection to the
+  zone wave data (`zone.waves_data[i]` = wave `i+1`, `groups_data[].is_boss`).
+- `extensions/main.gd` — on run start applies `seed` and `speed_multiplier` and
+  hides the panel; on `clean_up_room` shows the panel again and resets the speed
+  to x1.
+- `src/vibetato_panel.gd` — the [in-game panel](#in-game-panel), attached to the
+  scene-tree root by `mod_main.gd`, so it does not depend on the game's menu
+  script paths (Brotato 1.2 moved the title screen to `ui/menus/title_screen/`).
+
+Starting **items** (cursed or not) go through the vanilla `DebugService.debug_items`
+mechanism, and wave skip through `DebugService.starting_wave` / `starting_gold` /
+`instant_waves` — both are (re)applied from the active preset on every state
+reload, so switching presets never leaves stale values behind.
 
 Shared state (active preset, config, presets doc) is stored on the `RunData`
 autoload under the `vibe_vibetato_state` key and read by every extension.
@@ -192,8 +198,10 @@ from the Workshop (read-only location), create `user://Vibe-Vibetato.json`
 
 ## In-game panel
 
-Vibetato adds a panel to the **top-right of the main menu** (no restart needed
-— changes apply immediately and are persisted):
+Vibetato adds a panel at the **top-right of the screen while in menus** (attached
+to the scene-tree root, so game updates that move menu scripts can't break it; it
+hides automatically while a run is active). No restart needed — changes apply
+immediately and are persisted:
 
 - **Preset** dropdown — lists every preset from the presets file (plus `(none)`
   for vanilla behavior). Selecting one stores it as `active_preset` in
@@ -202,8 +210,9 @@ Vibetato adds a panel to the **top-right of the main menu** (no restart needed
   preset (written into `user://Vibe-Vibetato-presets.json`).
 - **Code** field + **Apply** — paste a `VBT1.…` run code to use it (stored as
   `run_code`, which takes priority over `active_preset`).
-- **Copy run code of active preset** — puts the active preset's shareable run
-  code on the clipboard (also logged to `modloader.log` at startup).
+- **Copy run code** / **Refresh** — copies the active preset's shareable run code
+  to the clipboard (also logged to `modloader.log` at startup), or reloads the
+  JSON files from disk.
 - **Speed** dropdown — x1/x2/x3/x4 from `speed_steps`; sets
   `Engine.time_scale` immediately and persists `speed_multiplier`. The
   `hotkey_speed_cycle` hotkey (F9) still works in-run.
@@ -281,13 +290,23 @@ mods-unpacked/Vibe-Vibetato/
 ├── config.json                                    default configuration (edit me)
 ├── presets.default.json                           bundled ban presets + example presets
 ├── src/vibetato_core.gd                           config/preset/run-code logic, shared helpers
+├── src/vibetato_panel.gd                          in-game panel (attached to the scene root)
 └── extensions/
-    ├── main.gd                                    seed + speed at run start, speed reset at run end
+    ├── main.gd                                    seed + speed at run start, panel hide/show, speed reset
     ├── singletons/item_service.gd                 shop bans + forced per-wave spawns
     ├── singletons/progress_data.gd                boss wave selection (on DLC/wave load)
-    ├── singletons/run_data.gd                     starting items/weapons + loadout templates
-    └── ui/menus/pages/main_menu.gd                re-applies wave skip + boss waves before each run
+    └── singletons/run_data.gd                     starting weapons + per-character loadout templates
 ```
+
+## Compatibility
+
+Hook paths were verified against a Brotato **v1.2.0.3** ModLoader log (Godot 3.7
+custom build): `singletons/item_service.gd`, `singletons/run_data.gd`,
+`main.gd`, `singletons/debug_service.gd` and `singletons/progress_data.gd` are
+all still patched by other current mods, and the panel is root-attached so the
+1.2 menu refactor (`ui/menus/title_screen/title_screen.gd`) does not affect it.
+All GDScript avoids Godot-3 type-inference pitfalls (no `:=` on empty literals or
+Variant-returning calls), which is what broke the first Workshop build.
 
 ## Disclaimer
 
