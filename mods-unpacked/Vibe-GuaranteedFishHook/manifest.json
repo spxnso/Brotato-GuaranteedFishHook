@@ -1,7 +1,7 @@
 {
 	"name": "GuaranteedFishHook",
 	"namespace": "Vibe",
-	"version_number": "1.1.0",
+	"version_number": "1.2.0",
 	"description": "Guarantees a configurable item (default: Fish Hook) exactly once in the shop of a configurable wave (default: wave 5). Configurable in-game via dami-ModOptions.",
 	"website_url": "",
 	"dependencies": [],

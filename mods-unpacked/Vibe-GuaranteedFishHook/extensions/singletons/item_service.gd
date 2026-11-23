@@ -21,6 +21,15 @@ var _last_wave := 0
 func get_player_shop_items(wave: int, player_index: int, args: ItemServiceGetShopItemsArgs) -> Array:
 	var offers: Array = .get_player_shop_items(wave, player_index, args)
 
+	# Track wave progression on every shop roll, BEFORE any early return, so
+	# a new run always clears the once-per-wave memory. The _last_wave guard
+	# keeps wave-1 rerolls (same _last_wave == 1) from re-clearing mid-shop.
+	if wave < _last_wave or (wave == 1 and _last_wave != 1):
+		if not _forced_keys.empty():
+			ModLoaderLog.info("New run detected (wave %d): cleared forced-slot memory." % wave, LOG_NAME)
+		_forced_keys.clear()
+	_last_wave = wave
+
 	var cfg := _get_config()
 	if not cfg.get("enabled", true):
 		return offers
@@ -33,10 +42,6 @@ func get_player_shop_items(wave: int, player_index: int, args: ItemServiceGetSho
 			_missing_item_logged = true
 			ModLoaderLog.error("Item '%s' not found. item_fish_hook needs the Abyssal Terrors DLC. Shop left unchanged." % String(cfg.get("item_id", "")), LOG_NAME)
 		return offers
-
-	if wave < _last_wave or wave == 1:
-		_forced_keys.clear()
-	_last_wave = wave
 
 	var key = str(wave) + ":" + str(player_index)
 	if cfg.get("force_once_per_wave", true) and _forced_keys.has(key):
@@ -79,6 +84,38 @@ func _wave_matches(wave: int, cfg: Dictionary) -> bool:
 		if int(w) == wave:
 			return true
 	return false
+
+
+func _get_config() -> Dictionary:
+	var cfg: Dictionary = DEFAULTS.duplicate(true)
+
+	# Lowest to highest precedence:
+	# 1) Bundled config.json shipped with the mod
+	# 2) Config managed by dami-ModOptions / ModLoaderConfig (in-game edits)
+	# 3) Manual override file user://Vibe-GuaranteedFishHook.json
+	_merge_file_into(ModLoaderMod.get_unpacked_dir().plus_file(MOD_ID + "/config.json"), cfg)
+
+	var mod_cfg = ModLoaderConfig.get_current_config(MOD_ID)
+	if mod_cfg != null and mod_cfg.data is Dictionary:
+		for key in mod_cfg.data:
+			cfg[key] = mod_cfg.data[key]
+
+	_merge_file_into("user://" + MOD_ID + ".json", cfg)
+	return cfg
+
+
+func _merge_file_into(path: String, cfg: Dictionary) -> void:
+	var file := File.new()
+	if file.open(path, File.READ) != OK:
+		return
+	var text := file.get_as_text()
+	file.close()
+	var parsed := JSON.parse(text)
+	if parsed.error != OK or not parsed.result is Dictionary:
+		ModLoaderLog.warning("Could not parse config file '%s'." % path, LOG_NAME)
+		return
+	for key in parsed.result:
+		cfg[key] = parsed.result[key]
 
 
 func _random_replacement(data, target, offers: Array):
@@ -140,33 +177,3 @@ func _get_target_item(my_id: String):
 	if ResourceLoader.exists(dlc_path):
 		return load(dlc_path)
 	return null
-
-
-func _get_config() -> Dictionary:
-	var cfg: Dictionary = DEFAULTS.duplicate(true)
-
-	# 1) Bundled config.json (also the default config for dami-ModOptions)
-	# 2) Config managed by dami-ModOptions / ModLoaderConfig (in-game editable)
-	# 3) Manual override file user://Vibe-GuaranteedFishHook.json
-	var mod_cfg = ModLoaderConfig.get_current_config(MOD_ID)
-	if mod_cfg != null and mod_cfg.data is Dictionary:
-		for key in mod_cfg.data:
-			cfg[key] = mod_cfg.data[key]
-
-	var paths := [
-		ModLoaderMod.get_unpacked_dir().plus_file(MOD_ID + "/config.json"),
-		"user://" + MOD_ID + ".json",
-	]
-	for path in paths:
-		var file := File.new()
-		if file.open(path, File.READ) != OK:
-			continue
-		var text := file.get_as_text()
-		file.close()
-		var parsed := JSON.parse(text)
-		if parsed.error != OK or not parsed.result is Dictionary:
-			ModLoaderLog.warning("Could not parse config file '%s'." % path, LOG_NAME)
-			continue
-		for key in parsed.result:
-			cfg[key] = parsed.result[key]
-	return cfg
