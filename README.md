@@ -17,7 +17,9 @@ shop (`base_shop.gd :: fill_shop_items`) calls to roll offers. The extension cal
 the original, then, if the current wave matches the config, replaces one shop slot
 with the configured item (running it through the game's own
 `apply_item_effect_modifications`, so tier bumps like Goldfish and curse rolls
-behave exactly like a natural shop offer). Slot prices are computed by the game
+behave exactly like a natural shop offer). With `force_cursed` on (default), the
+forced offer is then marked cursed, so the item pops cursed in the shop. Slot
+prices are computed by the game
 from the item and wave, so the Fish Hook appears at its normal wave-5 price.
 
 "Wave 5's shop" = the shop shown after finishing wave 5 (the game passes
@@ -66,6 +68,7 @@ All keys are optional; missing keys fall back to the defaults below.
 	"item_id": "item_fish_hook",
 	"slot": "last_item",
 	"apply_shop_modifiers": true,
+	"force_cursed": true,
 	"force_once_per_wave": true
 }
 ```
@@ -78,6 +81,7 @@ All keys are optional; missing keys fall back to the defaults below.
 | `item_id` | `"item_fish_hook"` | Any item id, e.g. `"item_medikit"`, `"item_mirror"`. |
 | `slot` | `"last_item"` | Which shop slot to use: `"first"`, `"last"`, `"random"` (any slot, incl. weapons) or `"first_item"`, `"last_item"`, `"random_item"` (item slots only, so the guaranteed weapon slots stay untouched). |
 | `apply_shop_modifiers` | `true` | Run the forced item through the game's shop modifiers (Goldfish tier bump, curse chance, DLC effects), like a natural offer. Set `false` for the plain item. |
+| `force_cursed` | `true` | The forced item pops **cursed** in the shop. Set `false` for the plain, uncursed item. |
 | `force_once_per_wave` | `true` | The item is forced only into the **first** shop roll of the wave (not re-forced on rerolls), and it always appears in **exactly one slot** — extra natural occurrences are replaced by a random other offer. Set `false` to re-force on every roll/reroll. |
 
 Notes:

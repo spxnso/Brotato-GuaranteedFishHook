@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS := {
 	"item_id": "item_fish_hook",
 	"slot": "last_item",
 	"apply_shop_modifiers": true,
+	"force_cursed": true,
 	"force_once_per_wave": true,
 }
 

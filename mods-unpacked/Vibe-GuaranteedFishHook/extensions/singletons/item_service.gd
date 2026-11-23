@@ -10,6 +10,7 @@ const DEFAULTS := {
 	"item_id": "item_fish_hook",
 	"slot": "last_item",
 	"apply_shop_modifiers": true,
+	"force_cursed": true,
 	"force_once_per_wave": true,
 }
 
@@ -70,9 +71,14 @@ func get_player_shop_items(wave: int, player_index: int, args: ItemServiceGetSho
 	if cfg.get("apply_shop_modifiers", true):
 		forced = apply_item_effect_modifications(target, player_index)
 
+	if cfg.get("force_cursed", true) and "cursed" in forced:
+		forced = forced.duplicate()
+		forced.cursed = true
+
 	offers[index][0] = forced
 	_forced_keys[key] = true
-	ModLoaderLog.info("Wave %d shop: slot %d forced to '%s' (player %d)." % [wave, index, target.my_id, player_index + 1], LOG_NAME)
+	var cursed_note: String = " cursed" if forced.get("cursed") else ""
+	ModLoaderLog.info("Wave %d shop: slot %d forced to '%s'%s (player %d)." % [wave, index, target.my_id, cursed_note, player_index + 1], LOG_NAME)
 	return offers
 
 
